@@ -1,0 +1,2166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spanish Conjugation Trainer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basecoat-css@0.3.5/dist/basecoat.cdn.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/basecoat-css@0.3.5/dist/js/all.min.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --card-radius: 14px;
+            --card-border: 1px solid #e2e8f0;
+            --card-bg: #fbfbfd;
+            --card-padding: clamp(16px, 4vw, 28px);
+            --section-gap: clamp(12px, 4vw, 24px);
+            --tense-border: rgba(102, 126, 234, 0.2);
+            --tense-bg: rgba(102, 126, 234, 0.05);
+        }
+
+        body {
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .setup-container,
+        .exercise-container {
+            margin-top: 20px;
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+            font-size: 0.95em;
+        }
+
+        input.input,
+        select.select {
+            width: 100%;
+        }
+
+        .selection-mode {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .selection-mode__label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .select {
+            position: relative;
+            width: 100%;
+            display: inline-block;
+        }
+
+        .select button {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            background: #f8fafc;
+            cursor: pointer;
+            font-weight: 600;
+            color: #1f2937;
+            transition: border-color 0.2s ease;
+        }
+
+        .select button:focus-visible {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .select-popover {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            max-height: 360px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e0;
+            background: white;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+            overflow: hidden;
+            z-index: 30;
+            display: none;
+        }
+
+        .select-popover[aria-hidden="false"] {
+            display: block;
+        }
+
+        .select-popover header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* padding: 10px 12px; */
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .select-popover header input {
+            flex: 1;
+            height: 100%;
+            border: transparent;
+            box-shadow: none;
+            /* border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.95rem;
+            background: #f9fafb; */
+        }
+
+        .select-popover__body {
+            max-height: 220px;
+            overflow-y: auto;
+            background: #fff;
+        }
+
+        .select-option {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .select-option:last-child {
+            border-bottom: none;
+        }
+
+        .select-option.is-selected {
+            background: #eef2ff;
+        }
+
+        .select-option .selected-check {
+            color: #10b981;
+            font-size: 1.1rem;
+        }
+
+        .select-option.empty {
+            cursor: default;
+            color: #6b7280;
+            justify-content: center;
+        }
+
+        .select-popover__footer {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: #475569;
+            border-top: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .manual-selection-chips {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .manual-chip {
+            background: #e0e7ff;
+            border-radius: 999px;
+            padding: 4px 10px;
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            font-weight: 600;
+            color: #3730a3;
+        }
+
+        .manual-chip button {
+            border: none;
+            background: transparent;
+            color: #3730a3;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .helper-text {
+            display: block;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #475569;
+        }
+
+        .helper-text--error {
+            color: #b91c1c;
+        }
+
+        .btn {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .verb-card {
+            margin: 16px 0;
+            padding: var(--card-padding);
+            border: var(--card-border);
+            border-radius: var(--card-radius);
+            background: var(--card-bg);
+            box-shadow: 0 6px 24px rgba(15, 23, 42, 0.07);
+            display: flex;
+            flex-direction: column;
+            gap: var(--section-gap);
+        }
+
+        .verb-card__header {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .verb-title {
+            font-size: clamp(1.2rem, 5vw, 1.7rem);
+            font-weight: 700;
+            color: #4c51bf;
+            text-align: left;
+        }
+
+        .verb-subtitle {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .pronoun-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .pronoun {
+            min-width: 110px;
+            font-weight: 600;
+            color: #475569;
+            font-size: clamp(0.85rem, 3.2vw, 0.95rem);
+        }
+
+        .conjugation-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+            font-family: monospace;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .conjugation-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Per-letter validation styling */
+        .letter-validation {
+            display: inline-flex;
+            gap: 2px;
+            font-family: monospace;
+            font-size: 1em;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .letter {
+            display: inline-block;
+            min-width: 12px;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .letter.correct {
+            background-color: #d1fae5;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .letter.incorrect {
+            background-color: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+        }
+
+        .letter.extra {
+            background-color: #fef3c7;
+            color: #92400e;
+            text-decoration: line-through;
+        }
+
+        .letter.near {
+            background-color: #fff7ed; /* very pale amber */
+            color: #92400e;
+            font-weight: 700;
+        }
+
+        .results-summary {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .results-summary__body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .results-summary__headline {
+            font-weight: 700;
+            color: #1d1f2c;
+            font-size: 1rem;
+        }
+
+        .results-summary__subtext {
+            color: #475569;
+            font-size: 0.92rem;
+        }
+
+        .progress-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .progress-row__label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .progress-row__bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-track {
+            flex: 1;
+            background: rgba(102, 126, 234, 0.2);
+            height: 12px;
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-indicator {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.25s ease;
+        }
+
+        .progress-indicator--warning {
+            background: #f59e0b;
+        }
+
+        .progress-indicator--danger {
+            background: #ef4444;
+        }
+
+        .progress-row__value {
+            font-weight: 600;
+            min-width: 80px;
+            text-align: right;
+            color: #1f2937;
+            font-size: 0.9rem;
+        }
+
+        .conjugation-input.has-validation {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .validation-display {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .answer-display {
+            margin-left: 10px;
+            color: #10b981;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .answer-display.near {
+            color: #92400e;
+            font-weight: 700;
+        }
+
+        /* On larger screens position the revealed correct-answer text to the right
+           so it doesn't shrink the input field or the per-letter validation area.
+           Mobile layout (max-width:600px) remains unchanged. */
+        @media (min-width: 601px) {
+            .pronoun-row {
+                position: relative;
+            }
+
+            .answer-display {
+                position: absolute;
+                right: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                min-width: 140px;
+                text-align: right;
+                z-index: 2;
+            }
+
+            /* Ensure input and validation areas keep space for the positioned answer */
+            .conjugation-input {
+                padding-right: 160px;
+            }
+
+            .validation-display {
+                margin-right: 160px;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tense-section {
+            margin: 0;
+            padding: clamp(12px, 4vw, 18px);
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid var(--tense-border);
+            background-image: linear-gradient(135deg, var(--tense-bg), #fff);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .tense-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #4c51bf;
+            font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #buttonContainer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.6em;
+            }
+
+            .setup-container,
+            .exercise-container {
+                padding: 20px;
+            }
+
+            .pronoun-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+                padding: 8px 0;
+            }
+
+            .pronoun {
+                min-width: auto;
+            }
+
+            .validation-display {
+                margin-left: 0;
+                margin-top: 8px;
+            }
+
+            .verb-card {
+                padding: clamp(14px, 5vw, 22px);
+            }
+        }
+
+        @media (min-width: 900px) {
+            .verb-card {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .verb-card__header {
+                flex: 1 1 100%;
+            }
+
+            .verb-card .tense-section {
+                flex: 1 1 calc(50% - 12px);
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Spanish Conjugation Trainer</h1>
+
+    <div class="setup-container card" id="setupContainer">
+        <div class="form-group">
+            <label for="verbCount">Number of verbs:</label>
+            <input type="number" id="verbCount" class="input" min="1" max="20" value="5">
+        </div>
+
+        <div class="form-group">
+            <label for="moodSelect">Mood (Modo):</label>
+            <select id="moodSelect" class="select">
+                <option value="">-- Select Mood --</option>
+                <option value="indicativo">Indicativo</option>
+                <option value="subjuntivo">Subjuntivo</option>
+                <option value="condicional">Condicional</option>
+                <option value="imperativo">Imperativo</option>
+            </select>
+        </div>
+
+        <div class="form-group hidden" id="tenseGroup">
+            <label for="tenseSelect">Tense (Tiempo):</label>
+            <select id="tenseSelect" class="select">
+                <option value="">-- All Tenses --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Verb source:</label>
+            <div class="selection-mode">
+                <label class="selection-mode__label">
+                    <input type="radio" class="radio" name="verbSource" value="random" checked>
+                    Random verbs
+                </label>
+                <label class="selection-mode__label">
+                    <input type="radio" class="radio" name="verbSource" value="manual">
+                    Choose verbs manually
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group hidden" id="manualSelector">
+            <label id="manualSelectLabel">Pick verbs (up to 20)</label>
+            <div id="manualSelect" class="select">
+                <button type="button" class="btn btn-outline justify-between font-normal w-full" id="manualSelectTrigger"
+                    aria-haspopup="listbox" aria-expanded="false" aria-controls="manualSelectList">
+                    <span class="truncate" id="manualSelectPlaceholder">Select verbs…</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-chevrons-up-down text-muted-foreground opacity-50 shrink-0">
+                        <path d="m7 15 5 5 5-5" />
+                        <path d="m7 9 5-5 5 5" />
+                    </svg>
+                </button>
+                <div id="manualSelectPopover" class="select-popover" data-popover aria-hidden="true">
+                    <header>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-search">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
+                        </svg>
+                        <input id="manualSelectSearch" class="input" type="text" placeholder="Search verbs..."
+                            autocomplete="off" autocorrect="off" spellcheck="false" aria-autocomplete="list"
+                            role="combobox" aria-expanded="false" aria-controls="manualSelectList"
+                            aria-labelledby="manualSelectTrigger" />
+                    </header>
+                    <div class="select-popover__body" role="listbox" id="manualSelectList"
+                        aria-orientation="vertical" aria-labelledby="manualSelectTrigger"></div>
+                    <div class="select-popover__footer" id="manualSelectFooter">Showing up to 200 entries at once.</div>
+                </div>
+                <input type="hidden" id="manualSelectValue" name="manualSelectValue" value="">
+            </div>
+            <div id="manualSelectionChips" class="manual-selection-chips" aria-live="polite"></div>
+            <span id="manualSelectHelper" class="helper-text">Select up to 20 verbs.</span>
+        </div>
+
+        <button id="startBtn" class="btn btn-primary" disabled>Start Exercise</button>
+    </div>
+
+    <div class="exercise-container card hidden" id="exerciseContainer">
+        <div class="loading hidden" id="loadingMsg">
+            <div class="loading-spinner"></div>
+            <div>Loading conjugations...</div>
+        </div>
+        <div id="exerciseContent"></div>
+        <div id="buttonContainer" class="hidden">
+            <button id="checkBtn" class="btn btn-success">Check Answers</button>
+            <button id="revealBtn" class="btn btn-warning">Reveal All Answers</button>
+            <button id="newExerciseBtn" class="btn btn-secondary">New Exercise</button>
+        </div>
+        <div id="resultsSummary" class="card results-summary hidden" role="status" aria-live="polite">
+            <div id="resultsSummaryBody" class="results-summary__body"></div>
+        </div>
+    </div>
+
+    <script>
+        const VERBS = [
+            "Abandonar",
+            "Abrazar",
+            "Abrir",
+            "Absorber",
+            "Abundar",
+            "Aburrir",
+            "Aburrirse",
+            "Abusar",
+            "Acabar",
+            "Acampar",
+            "Acceder",
+            "Acelerar",
+            "Aceptar",
+            "Acercar",
+            "Acercarse",
+            "Acompañar",
+            "Aconsejar",
+            "Acordar",
+            "Acordarse",
+            "Acostar",
+            "Acostarse",
+            "Acostumbrar",
+            "Actualizar",
+            "Actualizarse",
+            "Actuar",
+            "Acudir",
+            "Acumular",
+            "Acusar",
+            "Adaptar",
+            "Adelantar",
+            "Adelgazar",
+            "Admirar",
+            "Admitir",
+            "Adoptar",
+            "Adquirir",
+            "Advertir",
+            "Afirmar",
+            "Agradecer",
+            "Aguantar",
+            "Ahorrar",
+            "Aislar",
+            "Alcanzar",
+            "Alegrar",
+            "Alegrarse",
+            "Alejar",
+            "Alimentar",
+            "Almacenar",
+            "Almorzar",
+            "Alquilar",
+            "Alterar",
+            "Amanecer",
+            "Amar",
+            "Amarse",
+            "Amenazar",
+            "Añadir",
+            "Analizar",
+            "Andar",
+            "Animar",
+            "Anochecer",
+            "Añorar",
+            "Anotar",
+            "Anular",
+            "Anunciar",
+            "Apagar",
+            "Aparecer",
+            "Aplaudir",
+            "Aplicar",
+            "Apoyar",
+            "Apoyarse",
+            "Aprender",
+            "Apretar",
+            "Aprobar",
+            "Aprovechar",
+            "Aprovecharse",
+            "Apuntar",
+            "Armar",
+            "Arreglar",
+            "Arreglarse",
+            "Arrendar",
+            "Asegurar",
+            "Asegurarse",
+            "Asistir",
+            "Atender",
+            "Aumentar",
+            "Avanzar",
+            "Averiguar",
+            "Ayudar",
+            "Bailar",
+            "Bajar",
+            "Beber",
+            "Buscar",
+            "Caber",
+            "Caer",
+            "Caerse",
+            "Calcular",
+            "Calentar",
+            "Calentarse",
+            "Callar",
+            "Calmar",
+            "Cambiar",
+            "Cambiarse",
+            "Caminar",
+            "Cancelar",
+            "Cantar",
+            "Capacitar",
+            "Capacitarse",
+            "Cargar",
+            "Casarse",
+            "Castigar",
+            "Causar",
+            "Ceder",
+            "Celebrar",
+            "Celebrarse",
+            "Cenar",
+            "Centrar",
+            "Cepillar",
+            "Cepillarse",
+            "Cerrar",
+            "Cesar",
+            "Charlar",
+            "Chillar",
+            "Chocar",
+            "Chupar",
+            "Circular",
+            "Citar",
+            "Clasificar",
+            "Cobrar",
+            "Cocinar",
+            "Coger",
+            "Coincidir",
+            "Colaborar",
+            "Colar",
+            "Colgar",
+            "Colmar",
+            "Colocar",
+            "Combatir",
+            "Combinar",
+            "Comentar",
+            "Comenzar",
+            "Comer",
+            "Comerse",
+            "Cometer",
+            "Comparar",
+            "Compartir",
+            "Competir",
+            "Completar",
+            "Complicar",
+            "Complicarse",
+            "Comprar",
+            "Comprender",
+            "Comprobar",
+            "Comunicar",
+            "Comunicarse",
+            "Conceder",
+            "Concluir",
+            "Conducir",
+            "Conectar",
+            "Confesar",
+            "Confiar",
+            "Confirmar",
+            "Confundir",
+            "Conmover",
+            "Conocer",
+            "Conocerse",
+            "Conseguir",
+            "Consentir",
+            "Conservar",
+            "Considerar",
+            "Considerarse",
+            "Consistir",
+            "Consolar",
+            "Consolidar",
+            "Constituir",
+            "Construir",
+            "Consultar",
+            "Consumir",
+            "Contactar",
+            "Contagiar",
+            "Contar",
+            "Contemplar",
+            "Contener",
+            "Contestar",
+            "Continuar",
+            "Contribuir",
+            "Controlar",
+            "Convencer",
+            "Convenir",
+            "Conversar",
+            "Convertir",
+            "Convertirse",
+            "Copiar",
+            "Corregir",
+            "Correr",
+            "Corresponder",
+            "Cortar",
+            "Cosechar",
+            "Coser",
+            "Costar",
+            "Crear",
+            "Crecer",
+            "Creer",
+            "Creerse",
+            "Criar",
+            "Criarse",
+            "Criticar",
+            "Cruzar",
+            "Cubrir",
+            "Cuidar",
+            "Cuidarse",
+            "Cultivar",
+            "Cumplir",
+            "Curar",
+            "Dar",
+            "Darse",
+            "Deber",
+            "Decidir",
+            "Decir",
+            "Decirse",
+            "Declarar",
+            "Dedicar",
+            "Dedicarse",
+            "Defender",
+            "Defenderse",
+            "Definir",
+            "Dejar",
+            "Dejarse",
+            "Demandar",
+            "Demostrar",
+            "Denunciar",
+            "Depender",
+            "Desaparecer",
+            "Desarrollar",
+            "Desarrollarse",
+            "Desayunar",
+            "Descansar",
+            "Descargar",
+            "Descender",
+            "Desconectar",
+            "Describir",
+            "Descubrir",
+            "Desear",
+            "Despedir",
+            "Despedirse",
+            "Despertar",
+            "Despertarse",
+            "Detectar",
+            "Detener",
+            "Detenerse",
+            "Determinar",
+            "Devenir",
+            "Devolver",
+            "Dibujar",
+            "Dictar",
+            "Difundir",
+            "Dirigir",
+            "Disculpar",
+            "Discutir",
+            "Diseñar",
+            "Disfrutar",
+            "Disgustar",
+            "Disminuir",
+            "Disponer",
+            "Distinguir",
+            "Distribuir",
+            "Divertir",
+            "Divertirse",
+            "Dividir",
+            "Doler",
+            "Dominar",
+            "Donar",
+            "Dormir",
+            "Dormirse",
+            "Duchar",
+            "Ducharse",
+            "Dudar",
+            "Durar",
+            "Echar",
+            "Echarse",
+            "Editar",
+            "Educar",
+            "Efectuar",
+            "Ejecutar",
+            "Ejercer",
+            "Ejercitar",
+            "Elaborar",
+            "Elegir",
+            "Elevar",
+            "Eliminar",
+            "Elogiar",
+            "Emigrar",
+            "Emitir",
+            "Empeorar",
+            "Empezar",
+            "Emplear",
+            "Emprender",
+            "Empujar",
+            "Enamorarse",
+            "Encajar",
+            "Encantar",
+            "Encargar",
+            "Encender",
+            "Encerrar",
+            "Enchufar",
+            "Encoger",
+            "Encomendar",
+            "Encontrar",
+            "Encontrarse",
+            "Endulzar",
+            "Endurecer",
+            "Enfadar",
+            "Enfadarse",
+            "Enfocar",
+            "Enfrentar",
+            "Enfriar",
+            "Engañar",
+            "Enojar",
+            "Enojarse",
+            "Ensayar",
+            "Enseñar",
+            "Ensuciar",
+            "Entender",
+            "Enterarse",
+            "Entrar",
+            "Entregar",
+            "Entrenar",
+            "Entretener",
+            "Entretenerse",
+            "Entristecerse",
+            "Envejecerse",
+            "Enviar",
+            "Envolver",
+            "Equivocarse",
+            "Escalar",
+            "Escanear",
+            "Escapar",
+            "Escaparse",
+            "Escoger",
+            "Escoltar",
+            "Esconder",
+            "Escribir",
+            "Escribirse",
+            "Escuchar",
+            "Esperar",
+            "Esquiar",
+            "Establecer",
+            "Estacionar",
+            "Estallar",
+            "Estar",
+            "Estimar",
+            "Estrenar",
+            "Estudiar",
+            "Evacuar",
+            "Evaluar",
+            "Evitar",
+            "Examinar",
+            "Excluir",
+            "Exigir",
+            "Existir",
+            "Expandir",
+            "Experimentar",
+            "Explicar",
+            "Explorar",
+            "Exponer",
+            "Expresar",
+            "Exprimir",
+            "Extender",
+            "Extraer",
+            "Extrañar",
+            "Extrañarse",
+            "Fabricar",
+            "Facilitar",
+            "Faltar",
+            "Fascinar",
+            "Festejar",
+            "Fijar",
+            "Fijarse",
+            "Filmar",
+            "Firmar",
+            "Fomentar",
+            "Formar",
+            "Formular",
+            "Fortalecer",
+            "Forzar",
+            "Fotografiar",
+            "Fumar",
+            "Funcionar",
+            "Ganar",
+            "Garantizar",
+            "Gastar",
+            "Generalizar",
+            "Generar",
+            "Gestionar",
+            "Girar",
+            "Gobernar",
+            "Grabar",
+            "Gritar",
+            "Guardar",
+            "Guiar",
+            "Gustar",
+            "Haber",
+            "Habilitar",
+            "Habitar",
+            "Habituar",
+            "Hablar",
+            "Hablarse",
+            "Hacer",
+            "Hacerse",
+            "Hallar",
+            "Heredar",
+            "Hervir",
+            "Hornear",
+            "Huir",
+            "Identificar",
+            "Ignorar",
+            "Imaginar",
+            "Imitar",
+            "Impartir",
+            "Impedir",
+            "Implementar",
+            "Implicar",
+            "Imponer",
+            "Importar",
+            "Imprimir",
+            "Inclinar",
+            "Incluir",
+            "Incorporar",
+            "Incrementar",
+            "Indicar",
+            "Inducir",
+            "Infectar",
+            "Inflar",
+            "Informar",
+            "Ingresar",
+            "Inhalar",
+            "Iniciar",
+            "Innovar",
+            "Inscribir",
+            "Insistir",
+            "Instalar",
+            "Integrar",
+            "Intentar",
+            "Interactuar",
+            "Interesar",
+            "Interpretar",
+            "Interrumpir",
+            "Introducir",
+            "Invitar",
+            "Ir",
+            "Irse",
+            "Jubilarse",
+            "Jugar",
+            "Juzgar",
+            "Lamentar",
+            "Lanzar",
+            "Lavar",
+            "Lavarse",
+            "Leer",
+            "Levantar",
+            "Levantarse",
+            "Liberar",
+            "Liderar",
+            "Limpiar",
+            "Llamar",
+            "Llamarse",
+            "Llegar",
+            "Llenar",
+            "Llenarse",
+            "Llevar",
+            "Llevarse",
+            "Llorar",
+            "Lograr",
+            "Luchar",
+            "Manchar",
+            "Mandar",
+            "Manejar",
+            "Mantener",
+            "Mantenerse",
+            "Marcar",
+            "Marchar",
+            "Matar",
+            "Medir",
+            "Mejorar",
+            "Mencionar",
+            "Mentir",
+            "Merecer",
+            "Merendar",
+            "Meter",
+            "Mezclar",
+            "Mirar",
+            "Mirarse",
+            "Modificar",
+            "Molestar",
+            "Montar",
+            "Morir",
+            "Morirse",
+            "Mostrar",
+            "Mover",
+            "Moverse",
+            "Nacer",
+            "Nadar",
+            "Navegar",
+            "Necesitar",
+            "Negar",
+            "Negociar",
+            "Notar",
+            "Numerar",
+            "Obligar",
+            "Observar",
+            "Obtener",
+            "Ocultar",
+            "Ocupar",
+            "Ocurrir",
+            "Odiar",
+            "Ofrecer",
+            "Oír",
+            "Oler",
+            "Olvidar",
+            "Olvidarse",
+            "Operar",
+            "Ordenar",
+            "Organizar",
+            "Orientar",
+            "Originar",
+            "Pagar",
+            "Parar",
+            "Parecer",
+            "Parecerse",
+            "Participar",
+            "Partir",
+            "Pasar",
+            "Pasear",
+            "Pedir",
+            "Pelear",
+            "Peligrar",
+            "Pensar",
+            "Percibir",
+            "Perder",
+            "Permanecer",
+            "Permitir",
+            "Permitirse",
+            "Perseguir",
+            "Persistir",
+            "Pertenecer",
+            "Picar",
+            "Pintar",
+            "Pintarse",
+            "Pisar",
+            "Placer",
+            "Planchar",
+            "Planear",
+            "Planificar",
+            "Plantar",
+            "Plantear",
+            "Poder",
+            "Poner",
+            "Ponerse",
+            "Poseer",
+            "Practicar",
+            "Predecir",
+            "Preferir",
+            "Preguntar",
+            "Preguntarse",
+            "Preocuparse",
+            "Preparar",
+            "Prepararse",
+            "Presentar",
+            "Presentir",
+            "Prestar",
+            "Prestarse",
+            "Pretender",
+            "Prevenir",
+            "Probar",
+            "Probarse",
+            "Producir",
+            "Progresar",
+            "Prohibir",
+            "Prometer",
+            "Pronunciar",
+            "Proponer",
+            "Proteger",
+            "Protegerse",
+            "Protestar",
+            "Provocar",
+            "Proyectar",
+            "Publicar",
+            "Quedar",
+            "Quedarse",
+            "Quejarse",
+            "Quemar",
+            "Querer",
+            "Quitar",
+            "Quitarse",
+            "Razonar",
+            "Realizar",
+            "Rechazar",
+            "Recibir",
+            "Reclamar",
+            "Recoger",
+            "Recomendar",
+            "Reconocer",
+            "Recordar",
+            "Recorrer",
+            "Recuperar",
+            "Recurrir",
+            "Reducir",
+            "Referir",
+            "Referirse",
+            "Reflexionar",
+            "Regalar",
+            "Registrar",
+            "Regresar",
+            "Regular",
+            "Reír",
+            "Reírse",
+            "Rendir",
+            "Reparar",
+            "Repartir",
+            "Repasar",
+            "Repetir",
+            "Reponer",
+            "Reportar",
+            "Representar",
+            "Reproducir",
+            "Requerir",
+            "Resaltar",
+            "Rescatar",
+            "Reservar",
+            "Resistir",
+            "Resolver",
+            "Respetar",
+            "Respirar",
+            "Responder",
+            "Restringir",
+            "Resultar",
+            "Resumir",
+            "Retener",
+            "Retirar",
+            "Retirarse",
+            "Retomar",
+            "Retrasar",
+            "Retrasarse",
+            "Retroceder",
+            "Reunir",
+            "Reunirse",
+            "Revertir",
+            "Revisar",
+            "Revolver",
+            "Rezar",
+            "Robar",
+            "Rodar",
+            "Rodear",
+            "Rogar",
+            "Romper",
+            "Romperse",
+            "Saber",
+            "Saborear",
+            "Sacar",
+            "Sacarse",
+            "Sacudir",
+            "Salir",
+            "Saltar",
+            "Saltear",
+            "Saludar",
+            "Salvar",
+            "Sanar",
+            "Satisfacer",
+            "Secar",
+            "Secarse",
+            "Seducir",
+            "Seguir",
+            "Seleccionar",
+            "Sembrar",
+            "Señalar",
+            "Sentar",
+            "Sentarse",
+            "Sentir",
+            "Sentirse",
+            "Separar",
+            "Ser",
+            "Servir",
+            "Servirse",
+            "Significar",
+            "Situar",
+            "Sobrar",
+            "Sobresalir",
+            "Sobresaltar",
+            "Sobrescribir",
+            "Sobrevivir",
+            "Sofreír",
+            "Soler",
+            "Solicitar",
+            "Soltar",
+            "Solucionar",
+            "Sonar",
+            "Sonreír",
+            "Soplar",
+            "Soportar",
+            "Sorprender",
+            "Sospechar",
+            "Sostener",
+            "Subir",
+            "Subrayar",
+            "Suceder",
+            "Sufrir",
+            "Sugerir",
+            "Sumar",
+            "Superar",
+            "Suponer",
+            "Surfear",
+            "Surgir",
+            "Sustituir",
+            "Tardar",
+            "Temblar",
+            "Temer",
+            "Tender",
+            "Tener",
+            "Terminar",
+            "Tirar",
+            "Tirarse",
+            "Tocar",
+            "Tolerar",
+            "Tomar",
+            "Tomarse",
+            "Toser",
+            "Trabajar",
+            "Traducir",
+            "Traer",
+            "Tragar",
+            "Transferir",
+            "Transformar",
+            "Transmitir",
+            "Transportar",
+            "Trasladar",
+            "Trasladarse",
+            "Tratar",
+            "Triunfar",
+            "Tropezar",
+            "Ubicar",
+            "Ubicarse",
+            "Unir",
+            "Unirse",
+            "Usar",
+            "Utilizar",
+            "Vaciar",
+            "Vacunar",
+            "Valer",
+            "Valorar",
+            "Variar",
+            "Vencer",
+            "Vender",
+            "Venir",
+            "Ver",
+            "Verificar",
+            "Vestir",
+            "Vestirse",
+            "Viajar",
+            "Vibrar",
+            "Visitar",
+            "Vivir",
+            "Volar",
+            "Volver",
+            "Votar"
+        ];
+
+        const PRONOUNS = {
+            'yo': 'yo',
+            'tú': 'tú',
+            'él': 'él/ella/usted',
+            'nosotros': 'nosotros/nosotras',
+            'vosotros': 'vosotros/vosotras',
+            'ellos': 'ellos/ellas/ustedes'
+        };
+
+        const TENSE_MAP = {
+            'indicativo': [
+                { value: 'presente', label: 'Presente' },
+                { value: 'pretérito_perfecto_compuesto', label: 'Pretérito perfecto compuesto' },
+                { value: 'pretérito_imperfecto', label: 'Pretérito imperfecto' },
+                { value: 'pretérito_pluscuamperfecto', label: 'Pretérito pluscuamperfecto' },
+                { value: 'pretérito_perfecto_simple', label: 'Pretérito perfecto simple' },
+                { value: 'pretérito_anterior', label: 'Pretérito anterior' },
+                { value: 'futuro', label: 'Futuro' },
+                { value: 'futuro_perfecto', label: 'Futuro perfecto' }
+            ],
+            'subjuntivo': [
+                { value: 'presente', label: 'Presente' },
+                { value: 'pretérito_perfecto', label: 'Pretérito perfecto' },
+                { value: 'pretérito_imperfecto', label: 'Pretérito imperfecto' },
+                { value: 'pretérito_pluscuamperfecto', label: 'Pretérito pluscuamperfecto' },
+                { value: 'pretérito_imperfecto_2', label: 'Pretérito imperfecto 2' },
+                { value: 'pretérito_pluscuamperfecto_2', label: 'Pretérito pluscuamperfecto 2' },
+                { value: 'futuro', label: 'Futuro' },
+                { value: 'futuro_perfecto', label: 'Futuro perfecto' }
+            ],
+            'condicional': [
+                { value: 'condicional', label: 'Condicional simple' },
+                { value: 'condicional_perfecto', label: 'Condicional compuesto' }
+            ],
+            'imperativo': [
+                { value: 'afirmativo', label: 'Afirmativo' },
+                { value: 'negativo', label: 'Negativo' }
+            ]
+        };
+
+        const MOOD_LABELS = {
+            'indicativo': 'Indicativo',
+            'subjuntivo': 'Subjuntivo',
+            'condicional': 'Condicional',
+            'imperativo': 'Imperativo'
+        };
+
+        const STANDARD_PRONOUN_ORDER = ['yo', 'tú', 'él', 'nosotros', 'vosotros', 'ellos'];
+        const IMPERATIVE_PRONOUN_ORDER = ['tú', 'él', 'nosotros', 'vosotros', 'ellos'];
+        const PRONOUN_ALIAS_MAP = {
+            'yo': 'yo',
+            'tu': 'tú',
+            'tú': 'tú',
+            'vos': 'tú',
+            'usted': 'él',
+            'ud': 'él',
+            'el': 'él',
+            'él': 'él',
+            'ella': 'él',
+            'nosotros': 'nosotros',
+            'nosotras': 'nosotros',
+            'nos': 'nosotros',
+            'vosotros': 'vosotros',
+            'vosotras': 'vosotros',
+            'os': 'vosotros',
+            'ustedes': 'ellos',
+            'uds': 'ellos',
+            'ellos': 'ellos',
+            'ellas': 'ellos',
+            'me': 'yo',
+            'te': 'tú'
+        };
+
+        const SORTED_VERBS = [...VERBS].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+        const MAX_MANUAL_SELECTION = 20;
+        const DROPDOWN_DISPLAY_LIMIT = 200;
+        let manualSelection = [];
+        let manualSearchTerm = '';
+        let manualPopoverOpen = false;
+
+        function stripDiacritics(text) {
+            return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function normalizeVerbForRequest(verb) {
+            return stripDiacritics(verb).replace(/ñ/gi, 'n').trim();
+        }
+
+        function resolvePronounKey(pronounRaw, rowIndex, fallbackOrder = STANDARD_PRONOUN_ORDER) {
+            if (!pronounRaw) return null;
+            const normalized = stripDiacritics(pronounRaw)
+                .toLowerCase()
+                .replace(/[^a-z]/g, '');
+            if (PRONOUN_ALIAS_MAP[normalized]) {
+                return PRONOUN_ALIAS_MAP[normalized];
+            }
+            if (normalized === 'se' && fallbackOrder[rowIndex]) {
+                return fallbackOrder[rowIndex];
+            }
+            return fallbackOrder[rowIndex] || null;
+        }
+
+        function extractTableConjugations($table, fallbackOrder = STANDARD_PRONOUN_ORDER) {
+            const results = {};
+            if (!$table || $table.length === 0) {
+                return results;
+            }
+
+            let rowIndex = 0;
+            $table.find('tr').each(function () {
+                const $cells = $(this).find('td');
+                if ($cells.length === 2) {
+                    const pronounText = $cells.eq(0).text().trim();
+                    const conjugation = $cells.eq(1).text().trim();
+                    if (!conjugation) {
+                        return;
+                    }
+                    const pronounKey = resolvePronounKey(pronounText, rowIndex, fallbackOrder);
+                    if (pronounKey) {
+                        results[pronounKey] = conjugation.split('/').map(s => s.trim());
+                    }
+                    rowIndex++;
+                }
+            });
+
+            return results;
+        }
+
+        let currentExercise = null;
+        let correctAnswers = {};
+
+        $('#moodSelect').change(function () {
+            const mood = $(this).val();
+            if (mood) {
+                const tenses = TENSE_MAP[mood];
+                const $tenseSelect = $('#tenseSelect');
+                $tenseSelect.empty().append('<option value="">-- All Tenses --</option>');
+                tenses.forEach(t => {
+                    $tenseSelect.append(`<option value="${t.value}">${t.label}</option>`);
+                });
+                $('#tenseGroup').removeClass('hidden');
+                $('#startBtn').prop('disabled', false);
+            } else {
+                $('#tenseGroup').addClass('hidden');
+                $('#startBtn').prop('disabled', true);
+            }
+        });
+
+        $('#startBtn').click(function () {
+            const useManual = $('input[name="verbSource"]:checked').val() === 'manual';
+            const mood = $('#moodSelect').val();
+            const tense = $('#tenseSelect').val();
+            const countInput = parseInt($('#verbCount').val(), 10);
+            const count = useManual ? manualSelection.length : countInput;
+
+            if (!mood || (!useManual && (isNaN(count) || count < 1)) || VERBS.length === 0) {
+                alert('Please select a mood and ensure verbs are loaded');
+                return;
+            }
+
+            if (useManual && manualSelection.length === 0) {
+                alert('Please select at least one verb before starting the exercise.');
+                return;
+            }
+
+            startExercise(count, mood, tense, useManual);
+        });
+
+        $('input[name="verbSource"]').change(function () {
+            const manual = $(this).val() === 'manual';
+            $('#manualSelector').toggleClass('hidden', !manual);
+            $('#verbCount').prop('disabled', manual).attr('aria-disabled', manual);
+            if (!manual) {
+                closeManualPopover();
+            }
+        });
+
+        // $('#manualSelectTrigger').on('click', function (event) {
+        //     event.preventDefault();
+        //     event.stopPropagation();
+        //     // If the manual radio isn't selected yet, select it and open the popover
+        //     const $manualRadio = $('input[name="verbSource"][value="manual"]');
+        //     if (!$manualRadio.prop('checked')) {
+        //         // Don't trigger the radio change event (it may cause ordering issues).
+        //         // Instead, set the radio and directly perform the UI changes that
+        //         // the change handler would do, then open the popover immediately.
+        //         $manualRadio.prop('checked', true);
+        //         // Show manual selector and disable count input (mirror change handler)
+        //         $('#manualSelector').removeClass('hidden');
+        //         $('#verbCount').prop('disabled', true).attr('aria-disabled', true);
+        //         // Refresh UI pieces and open popover
+        //         refreshManualControls();
+        //         openManualPopover();
+        //         return;
+        //     }
+
+        //     manualPopoverOpen ? closeManualPopover() : openManualPopover();
+        // });
+
+        $('#manualSelectPopover').on('click', function (event) {
+            event.stopPropagation();
+        });
+
+        $('#manualSelectList').on('click', '.select-option', function () {
+            const value = $(this).data('value');
+            tryToggleManualVerb(value);
+        });
+
+        $('#manualSelectSearch').on('input', function () {
+            manualSearchTerm = $(this).val();
+            refreshManualControls();
+        });
+
+        $('#manualSelectionChips').on('click', '.manual-chip__remove', function () {
+            const value = $(this).data('value');
+            if (!value) {
+                return;
+            }
+            manualSelection = manualSelection.filter(v => v !== value);
+            refreshManualControls();
+        });
+
+        $(document).on('click', function (event) {
+            if (manualPopoverOpen && !$(event.target).closest('#manualSelect').length) {
+                closeManualPopover();
+            }
+        });
+
+        $(document).on('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeManualPopover();
+            }
+        });
+
+        refreshManualControls();
+
+        function startExercise(count, mood, tense, useManual = $('input[name="verbSource"]:checked').val() === 'manual') {
+            let selectedVerbs = [];
+            if (useManual) {
+                if (!manualSelection.length) {
+                    alert('Please select at least one verb before starting the exercise.');
+                    return;
+                }
+                selectedVerbs = [...manualSelection];
+            } else {
+                selectedVerbs = selectRandomVerbs(count);
+            }
+
+            resetResultsSummary();
+            $('#setupContainer').addClass('hidden');
+            $('#exerciseContainer').removeClass('hidden');
+            $('#loadingMsg').removeClass('hidden');
+            $('#exerciseContent').empty();
+            $('#buttonContainer').addClass('hidden');
+
+            fetchConjugations(selectedVerbs, mood, tense);
+        }
+
+        function selectRandomVerbs(count) {
+            const shuffled = [...VERBS].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, Math.min(count, VERBS.length));
+        }
+
+        function renderManualDropdown() {
+            const normalizedTerm = manualSearchTerm.trim().toLowerCase();
+            const filtered = SORTED_VERBS.filter(verb => !normalizedTerm || verb.toLowerCase().includes(normalizedTerm));
+            const limited = filtered.slice(0, DROPDOWN_DISPLAY_LIMIT);
+            const $list = $('#manualSelectList').empty();
+
+            if (!limited.length) {
+                $list.append('<div class="select-option empty">No verbs match your search.</div>');
+            } else {
+                limited.forEach(verb => {
+                    const isSelected = manualSelection.includes(verb);
+                    const $option = $(
+                        `<div role="option" class="select-option${isSelected ? ' is-selected' : ''}" data-value="${verb}" aria-selected="${isSelected}">
+                            <span>${verb}</span>
+                            ${isSelected ? '<span class="selected-check">✓</span>' : ''}
+                        </div>`
+                    );
+                    $list.append($option);
+                });
+            }
+
+            const overflowCount = Math.max(0, filtered.length - limited.length);
+            const footerText = overflowCount > 0
+                ? `Showing first ${DROPDOWN_DISPLAY_LIMIT} matches.`
+                : `${filtered.length} verbs available.`;
+            $('#manualSelectFooter').text(footerText);
+        }
+
+        function updateManualHelperText(message) {
+            const $helper = $('#manualSelectHelper');
+            if (message) {
+                $helper.text(message).addClass('helper-text--error');
+                return;
+            }
+            $helper.removeClass('helper-text--error');
+            const selectedCount = manualSelection.length;
+            const baseText = selectedCount
+                ? `${selectedCount}/${MAX_MANUAL_SELECTION} verbs selected.`
+                : `Select up to ${MAX_MANUAL_SELECTION} verbs.`;
+            const filterText = manualSearchTerm.trim()
+                ? `Filtered results are limited to ${DROPDOWN_DISPLAY_LIMIT} entries.`
+                : `Showing up to ${DROPDOWN_DISPLAY_LIMIT} entries at a time.`;
+            const manualModeText = 'Manual exercises use only the verbs you choose.';
+            $helper.text(`${baseText} ${manualModeText} ${filterText}`);
+        }
+
+        function renderManualSelectionChips() {
+            const $chips = $('#manualSelectionChips').empty();
+            manualSelection.forEach(verb => {
+                const $chip = $(
+                    `<span class="manual-chip">
+                        ${verb}
+                        <button type="button" class="manual-chip__remove" data-value="${verb}" aria-label="Remove ${verb}">×</button>
+                    </span>`
+                );
+                $chips.append($chip);
+            });
+        }
+
+        function updateManualLabel() {
+            const $placeholder = $('#manualSelectPlaceholder');
+            if (!manualSelection.length) {
+                $placeholder.text('Select verbs…');
+            } else if (manualSelection.length === 1) {
+                $placeholder.text(manualSelection[0]);
+            } else {
+                $placeholder.text(`${manualSelection.length} verbs selected`);
+            }
+        }
+
+        function syncManualHiddenValue() {
+            $('#manualSelectValue').val(manualSelection.join(','));
+        }
+
+        function refreshManualControls(message) {
+            updateManualHelperText(message);
+            renderManualSelectionChips();
+            updateManualLabel();
+            syncManualHiddenValue();
+            renderManualDropdown();
+        }
+
+        function resetResultsSummary() {
+            $('#resultsSummary').addClass('hidden');
+            $('#resultsSummaryBody').empty();
+        }
+
+        function buildProgressMarkup(label, count, total, tone) {
+            const percent = Math.min(100, Math.round((count / total) * 100));
+            return `
+                <div class="progress-row">
+                    <div class="progress-row__label">${label}</div>
+                    <div class="progress-row__bar">
+                        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${count}">
+                            <div class="progress-indicator progress-indicator--${tone}" style="width: ${percent}%"></div>
+                        </div>
+                        <span class="progress-row__value">${count}/${total} correctness</span>
+                    </div>
+                </div>`;
+        }
+
+        function updateResultsSummary(stats, total) {
+            const $summary = $('#resultsSummary');
+            const $body = $('#resultsSummaryBody');
+
+            if (!total) {
+                resetResultsSummary();
+                return;
+            }
+
+            $summary.removeClass('hidden');
+            $body.empty();
+
+            if (stats.correct === total) {
+                $body.append(`
+                    <div>
+                        <div class="results-summary__headline">${total}/${total} correct</div>
+                        <p class="results-summary__subtext">Perfect run! Every conjugation is spot on.</p>
+                    </div>
+                `);
+                return;
+            }
+
+            $body.append(`
+                <div>
+                    <div class="results-summary__headline">${stats.correct}/${total} correct</div>
+                    <p class="results-summary__subtext">Review the areas below to close the gap.</p>
+                </div>
+            `);
+
+            if (stats.incorrect > 0) {
+                $body.append(buildProgressMarkup('Incorrect answers', stats.incorrect, total, 'danger'));
+            }
+
+            if (stats.near > 0) {
+                $body.append(buildProgressMarkup('Slight mismatches', stats.near, total, 'warning'));
+            }
+        }
+
+        function closeManualPopover() {
+            manualPopoverOpen = false;
+            $('#manualSelectPopover').attr('aria-hidden', 'true');
+            $('#manualSelectTrigger').attr('aria-expanded', 'false');
+            $('#manualSelectSearch').attr('aria-expanded', 'false');
+            manualSearchTerm = '';
+            $('#manualSelectSearch').val('');
+            refreshManualControls();
+        }
+
+        function openManualPopover() {
+            manualPopoverOpen = true;
+            $('#manualSelectPopover').attr('aria-hidden', 'false');
+            $('#manualSelectTrigger').attr('aria-expanded', 'true');
+            $('#manualSelectSearch').attr('aria-expanded', 'true').focus();
+        }
+
+        function tryToggleManualVerb(value) {
+            if (!value) {
+                return;
+            }
+            if (manualSelection.includes(value)) {
+                manualSelection = manualSelection.filter(v => v !== value);
+                refreshManualControls();
+                return;
+            }
+            if (manualSelection.length >= MAX_MANUAL_SELECTION) {
+                refreshManualControls(`You can select up to ${MAX_MANUAL_SELECTION} verbs.`);
+                return;
+            }
+            manualSelection.push(value);
+            refreshManualControls();
+        }
+
+        async function fetchConjugations(verbs, mood, tense) {
+            try {
+                const promises = verbs.map(verb =>
+                    fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://entre-amigos.ru/components-loco/conjugator/getuser.php?q=${verb}`)}`)
+                        .then(response => response.text())
+                );
+
+                const responses = await Promise.all(promises);
+
+                correctAnswers = {};
+                responses.forEach((html, idx) => {
+                    correctAnswers[verbs[idx]] = parseConjugations(html, mood, tense);
+                });
+
+                displayExercise(verbs, mood, tense);
+            } catch (error) {
+                console.error('Error fetching conjugations:', error);
+                alert('Error loading conjugations. Please try again.');
+                resetExercise();
+            }
+        }
+
+        function parseConjugations(html, mood, tense) {
+            const $html = $('<div>').html(html);
+            const conjugations = {};
+
+            const moodMap = {
+                'indicativo': 'Indicativo',
+                'subjuntivo': 'Subjuntivo',
+                'imperativo': 'Imperativo',
+                'condicional': 'Condicional'
+            };
+
+            const tenseLabels = {
+                'presente': 'Presente',
+                'pretérito_perfecto_compuesto': 'Pretérito perfecto compuesto',
+                'pretérito_imperfecto': 'Pretérito imperfecto',
+                'pretérito_pluscuamperfecto': 'Pretérito pluscuamperfecto',
+                'pretérito_perfecto_simple': 'Pretérito perfecto simple',
+                'pretérito_anterior': 'Pretérito anterior',
+                'futuro': 'Futuro',
+                'futuro_perfecto': 'Futuro perfecto',
+                'condicional': 'Condicional simple',
+                'condicional_perfecto': 'Condicional compuesto',
+                'pretérito_perfecto': 'Pretérito perfecto',
+                'pretérito_imperfecto_2': 'Pretérito imperfecto 2',
+                'pretérito_pluscuamperfecto_2': 'Pretérito pluscuamperfecto 2',
+                'afirmativo': 'Afirmativo',
+                'negativo': 'Negativo'
+            };
+
+            const tensesToParse = tense ? [tense] : TENSE_MAP[mood].map(t => t.value);
+
+            $html.find('h3').each(function () {
+                const moodText = $(this).text().trim();
+                if (moodText === moodMap[mood]) {
+                    const $container = $(this).next('table');
+
+                    tensesToParse.forEach(t => {
+                        const label = tenseLabels[t];
+                        const $tenseTable = $container.find('th').filter(function () {
+                            return $(this).text().trim() === label;
+                        }).closest('table');
+
+                        const fallbackOrder = mood === 'imperativo' ? IMPERATIVE_PRONOUN_ORDER : STANDARD_PRONOUN_ORDER;
+                        const parsed = extractTableConjugations($tenseTable, fallbackOrder);
+                        if (Object.keys(parsed).length) {
+                            conjugations[t] = parsed;
+                        }
+                    });
+                }
+            });
+
+            if (mood === 'imperativo') {
+                $html.find('h3').each(function () {
+                    if ($(this).text().trim() === 'Imperativo') {
+                        const $container = $(this).next('table');
+                        const pronouns = IMPERATIVE_PRONOUN_ORDER;
+
+                        const $affirmTable = $container.find('th').filter(function () {
+                            return $(this).text().trim() === 'Afirmativo';
+                        }).closest('table');
+                        const affirmParsed = extractTableConjugations($affirmTable, pronouns);
+                        if (Object.keys(affirmParsed).length) {
+                            conjugations['afirmativo'] = affirmParsed;
+                        }
+
+                        const negativeData = {};
+                        const $negTable = $container.find('th').filter(function () {
+                            return $(this).text().trim() === 'Negativo';
+                        }).closest('table');
+                        if ($negTable.length) {
+                            $negTable.find('tr').each(function (idx) {
+                                const $cell = $(this).find('td');
+                                if ($cell.length === 1) {
+                                    const text = $cell.text().trim();
+                                    if (text) {
+                                        const pronounKey = pronouns[idx];
+                                        if (pronounKey) {
+                                            negativeData[pronounKey] = text.split('/').map(s => s.trim());
+                                        }
+                                    }
+                                }
+                            });
+                            if (Object.keys(negativeData).length) {
+                                conjugations['negativo'] = negativeData;
+                            }
+                        }
+                    }
+                });
+            }
+
+            return conjugations;
+        }
+
+        function displayExercise(verbs, mood, tense) {
+            $('#loadingMsg').addClass('hidden');
+            const $content = $('#exerciseContent');
+
+            const moodLabel = MOOD_LABELS[mood] || mood;
+
+            verbs.forEach(verb => {
+                const verbConjugations = correctAnswers[verb];
+                const $verbCard = $('<div>').addClass('verb-card card');
+                const $header = $('<header>').addClass('verb-card__header');
+                $header.append(`<div class="verb-title">${verb}</div>`);
+                $header.append(`<p class="verb-subtitle">Modo: ${moodLabel}</p>`);
+                $verbCard.append($header);
+
+                const tensesToDisplay = tense ? [tense] : Object.keys(verbConjugations);
+
+                tensesToDisplay.forEach(t => {
+                    const tenseLabel = TENSE_MAP[mood].find(tm => tm.value === t)?.label || t;
+                    const $tenseSection = $('<section>').addClass('tense-section');
+                    $tenseSection.append(`<div class="tense-title">${tenseLabel}</div>`);
+
+                    Object.keys(PRONOUNS).forEach(pronoun => {
+                        if (verbConjugations[t] && verbConjugations[t][pronoun] && verbConjugations[t][pronoun].length > 0) {
+                            const $row = $('<div>').addClass('pronoun-row');
+                            $row.append(`<div class="pronoun">${PRONOUNS[pronoun]}</div>`);
+                            $row.append(`<input type="text" class="input conjugation-input" 
+                                data-verb="${verb}" data-tense="${t}" data-pronoun="${pronoun}">`);
+                            $row.append(`<div class="validation-display"></div>`);
+                            $row.append(`<span class="answer-display hidden"></span>`);
+                            $tenseSection.append($row);
+                        }
+                    });
+
+                    $verbCard.append($tenseSection);
+                });
+
+                $content.append($verbCard);
+            });
+
+            $('#buttonContainer').removeClass('hidden');
+        }
+
+        function generateLetterValidation(userAnswer, correctAnswer) {
+            const userLower = userAnswer.toLowerCase();
+            const correctLower = correctAnswer.toLowerCase();
+            let html = '<div class="letter-validation">';
+
+            const maxLength = Math.max(userAnswer.length, correctAnswer.length);
+
+            for (let i = 0; i < maxLength; i++) {
+                const userChar = userAnswer[i] || '';
+                const correctChar = correctAnswer[i] || '';
+
+                if (i < userAnswer.length && i < correctAnswer.length) {
+                    if (userLower[i] === correctLower[i]) {
+                        html += `<span class="letter correct">${userChar}</span>`;
+                    } else if (stripDiacritics(userLower[i]) === stripDiacritics(correctLower[i])) {
+                        // Same base letter but different diacritic (e.g., n vs ñ, á vs a)
+                        html += `<span class="letter near">${userChar}</span>`;
+                    } else {
+                        html += `<span class="letter incorrect">${userChar}</span>`;
+                    }
+                } else if (i >= correctAnswer.length) {
+                    // Extra characters typed by user
+                    html += `<span class="letter extra">${userChar}</span>`;
+                } else {
+                    // Missing characters (show as underscores)
+                    html += `<span class="letter incorrect">_</span>`;
+                }
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        $('#checkBtn').click(function () {
+            const stats = { correct: 0, near: 0, incorrect: 0 };
+            let totalInputs = 0;
+
+            $('.conjugation-input').each(function () {
+                totalInputs++;
+                const $input = $(this);
+                const verb = $input.data('verb');
+                const tense = $input.data('tense');
+                const pronoun = $input.data('pronoun');
+                const userAnswer = $input.val().trim();
+                const correctAnswer = (correctAnswers[verb] && correctAnswers[verb][tense]) ? correctAnswers[verb][tense][pronoun] : undefined;
+                const correctAnswerTrim = correctAnswer || [];
+                const isCorrect = correctAnswerTrim.some(ans => userAnswer.toLowerCase() === ans.toLowerCase());
+                const isNormalized = correctAnswerTrim.some(ans => stripDiacritics(userAnswer).toLowerCase() === stripDiacritics(ans).toLowerCase());
+
+                if (isCorrect) {
+                    stats.correct++;
+                    $input.css({
+                        'border-color': '#10b981',
+                        'background-color': '#d1fae5'
+                    });
+                    $input.siblings('.validation-display').empty();
+                    $input.siblings('.answer-display').addClass('hidden').removeClass('near');
+                    $input.removeClass('has-validation');
+                } else if (isNormalized) {
+                    stats.near++;
+                    // user typed a correct letter without diacritics (e.g., 'n' instead of 'ñ')
+                    $input.css({
+                        'border-color': '#f59e0b',
+                        'background-color': '#fff7ed'
+                    });
+                    if (userAnswer) {
+                        const validationHTML = generateLetterValidation(userAnswer, correctAnswerTrim[0]);
+                        $input.siblings('.validation-display').html(validationHTML);
+                        $input.addClass('has-validation');
+                    } else {
+                        $input.siblings('.validation-display').empty();
+                        $input.removeClass('has-validation');
+                    }
+                    $input.siblings('.answer-display').removeClass('hidden').addClass('near').text(`≈ ${correctAnswerTrim[0]}`);
+                    $input.removeClass('has-validation');
+                } else {
+                    stats.incorrect++;
+                    $input.css({
+                        'border-color': '#ef4444',
+                        'background-color': '#fee2e2'
+                    });
+                    if (userAnswer) {
+                        const validationHTML = generateLetterValidation(userAnswer, correctAnswerTrim[0]);
+                        $input.siblings('.validation-display').html(validationHTML);
+                        $input.addClass('has-validation');
+                    } else {
+                        $input.siblings('.validation-display').empty();
+                        $input.removeClass('has-validation');
+                    }
+                    $input.siblings('.answer-display').removeClass('near').text(`✓ ${correctAnswerTrim[0]}`).removeClass('hidden');
+                }
+            });
+
+            updateResultsSummary(stats, totalInputs);
+
+            // After summary is updated, scroll it into view and focus for accessibility
+            const $summary = $('#resultsSummary');
+            if ($summary.length) {
+                // allow DOM updates to settle then scroll
+                setTimeout(() => {
+                    try {
+                        $summary.removeClass('hidden');
+                        $summary[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        $summary.attr('tabindex', '-1').focus();
+                    } catch (e) {
+                        // ignore scrolling errors
+                        console.warn('Scroll to results failed', e);
+                    }
+                }, 50);
+            }
+        });
+
+        $('#revealBtn').click(function () {
+            $('.conjugation-input').each(function () {
+                const $input = $(this);
+                const verb = $input.data('verb');
+                const tense = $input.data('tense');
+                const pronoun = $input.data('pronoun');
+                const correctAnswer = correctAnswers[verb][tense][pronoun];
+
+                $input.val(correctAnswer[0]);
+                $input.css({
+                    'border-color': '#10b981',
+                    'background-color': '#d1fae5'
+                });
+                $input.removeClass('has-validation');
+                $input.siblings('.validation-display').empty();
+                $input.siblings('.answer-display').removeClass('near').addClass('hidden');
+            });
+        });
+
+        $('#newExerciseBtn').click(resetExercise);
+
+        function resetExercise() {
+            $('#exerciseContainer').addClass('hidden');
+            $('#setupContainer').removeClass('hidden');
+            $('#exerciseContent').empty();
+            correctAnswers = {};
+            resetResultsSummary();
+        }
+    </script>
+</body>
+
+</html>
